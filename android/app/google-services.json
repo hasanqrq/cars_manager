@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "443036827242",
+    "project_id": "carsmanager-48ab8",
+    "storage_bucket": "carsmanager-48ab8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:443036827242:android:4c6d95295463f35e9ed413",
+        "android_client_info": {
+          "package_name": "com.carsmanager.example"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4QRYe4kOg-w72aQ_dPHK316T2F9a8mSg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:443036827242:android:a4fdf7680a38e2fe9ed413",
+        "android_client_info": {
+          "package_name": "com.example.carsmanager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4QRYe4kOg-w72aQ_dPHK316T2F9a8mSg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
