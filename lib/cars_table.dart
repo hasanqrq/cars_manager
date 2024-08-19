@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'car.dart';
+import 'package:intl/intl.dart';
 
 class CarsTable extends StatefulWidget {
   const CarsTable({Key? key}) : super(key: key);
@@ -10,7 +11,7 @@ class CarsTable extends StatefulWidget {
 }
 
 class _CarsTableState extends State<CarsTable> {
-  late Future<List<Car>> _carsFuture;
+  List<Car>? _cars;
   String searchQuery = ""; // Variable to hold the search query
 
   @override
@@ -19,19 +20,22 @@ class _CarsTableState extends State<CarsTable> {
     _refreshCars();
   }
 
-  void _refreshCars() {
+  void _refreshCars() async {
+    final cars = await DatabaseHelper().getCars();
     setState(() {
-      _carsFuture = DatabaseHelper().getCars();
+      _cars = cars;
     });
   }
 
   void _deleteCar(String id) async {
     await DatabaseHelper().deleteCar(id);
-    _refreshCars(); // Refresh the car list after deletion
+    setState(() {
+      _cars = _cars?.where((car) => car.id != id).toList();
+    });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text('Car deleted successfully!'),
-        duration: Duration(seconds: 2),
+        duration: Duration(seconds: 3),
       ),
     );
   }
@@ -77,63 +81,55 @@ class _CarsTableState extends State<CarsTable> {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<Car>>(
-              future: _carsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No cars found.'));
-                } else {
-                  final cars = _filterCars(snapshot.data!);
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        columns: const [
-                          DataColumn(label: Text('Type')),
-                          DataColumn(label: Text('Number')),
-                          DataColumn(label: Text('Chassis Number')),
-                          DataColumn(label: Text('Make')),
-                          DataColumn(label: Text('Model')),
-                          DataColumn(label: Text('Color')),
-                          DataColumn(label: Text('Production Date')),
-                          DataColumn(label: Text('Engine Capacity')),
-                          DataColumn(label: Text('Actions')),
-                        ],
-                        rows: cars.map((car) {
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(car.typeOfCar)),
-                              DataCell(Text(car.numberOfCar.toString())),
-                              DataCell(Text(car.chassisNumber)),
-                              DataCell(Text(car.make)),
-                              DataCell(Text(car.model)),
-                              DataCell(Text(car.color)),
-                              DataCell(
-                                  Text(car.productionDate.toIso8601String())),
-                              DataCell(Text(car.engineCapacity.toString())),
-                              DataCell(
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.red),
-                                  onPressed: () {
-                                    _deleteCar(car.id);
-                                  },
-                                ),
-                              ),
+            child: _cars == null
+                ? const Center(child: CircularProgressIndicator())
+                : _cars!.isEmpty
+                    ? const Center(child: Text('No cars found.'))
+                    : SingleChildScrollView(
+                        scrollDirection: Axis.vertical,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            columns: const [
+                              DataColumn(label: Text('Type')),
+                              DataColumn(label: Text('Number')),
+                              DataColumn(label: Text('Chassis Number')),
+                              DataColumn(label: Text('Make')),
+                              DataColumn(label: Text('Model')),
+                              DataColumn(label: Text('Color')),
+                              DataColumn(label: Text('Production Date')),
+                              DataColumn(label: Text('Engine Capacity')),
+                              DataColumn(label: Text('Actions')),
                             ],
-                          );
-                        }).toList(),
+                            rows: _filterCars(_cars!).map((car) {
+                              final String formattedDate = DateFormat.y().format(
+                                  car.productionDate); // Format date to show only the year
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text(car.typeOfCar)),
+                                  DataCell(Text(car.numberOfCar.toString())),
+                                  DataCell(Text(car.chassisNumber)),
+                                  DataCell(Text(car.make)),
+                                  DataCell(Text(car.model)),
+                                  DataCell(Text(car.color)),
+                                  DataCell(Text(
+                                      formattedDate)), // Display only the year
+                                  DataCell(Text(car.engineCapacity.toString())),
+                                  DataCell(
+                                    IconButton(
+                                      icon: const Icon(Icons.delete,
+                                          color: Colors.red),
+                                      onPressed: () {
+                                        _deleteCar(car.id);
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ),
                       ),
-                    ),
-                  );
-                }
-              },
-            ),
           ),
         ],
       ),

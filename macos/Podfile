@@ -1,5 +1,13 @@
 platform :osx, '10.14'
 
+use_frameworks!
+
+target 'Runner' do
+  pod 'Firebase/CoreOnly', '~> 10.29.0'
+  pod 'Firebase/Analytics'
+  # Add other Firebase pods you need here
+end
+
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -41,3 +49,5 @@ post_install do |installer|
     flutter_additional_macos_build_settings(target)
   end
 end
+
+
