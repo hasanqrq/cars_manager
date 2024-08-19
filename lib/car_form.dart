@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'cars_table.dart';
-import 'package:cars_manager/car.dart';
+import 'car.dart';
 
 class CarForm extends StatefulWidget {
   const CarForm({Key? key}) : super(key: key);
@@ -46,7 +46,8 @@ class CarFormState extends State<CarForm> {
         make: _makeController.text,
         model: _modelController.text,
         color: _colorController.text,
-        productionDate: DateTime.parse(_productionDateController.text),
+        productionDate: DateTime(
+            int.parse(_productionDateController.text)), // Using only the year
         engineCapacity: double.parse(_engineCapacityController.text),
       );
       await DatabaseHelper().insertCar(car);
@@ -133,10 +134,16 @@ class CarFormState extends State<CarForm> {
               TextFormField(
                 controller: _productionDateController,
                 decoration: const InputDecoration(
-                    labelText: 'Production Date (YYYY-MM-DD)'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Enter the production date' : null,
-                keyboardType: TextInputType.datetime,
+                    labelText: 'Production Year (YYYY)'), // Updated label
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Enter the production year';
+                  } else if (int.tryParse(value) == null || value.length != 4) {
+                    return 'Enter a valid year';
+                  }
+                  return null;
+                },
+                keyboardType: TextInputType.number,
               ),
               TextFormField(
                 controller: _engineCapacityController,
