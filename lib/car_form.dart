@@ -5,7 +5,7 @@ import 'cars_table.dart';
 import 'car.dart';
 
 class CarForm extends StatefulWidget {
-  const CarForm({Key? key}) : super(key: key);
+  const CarForm({super.key});
 
   @override
   CarFormState createState() => CarFormState();
@@ -14,44 +14,48 @@ class CarForm extends StatefulWidget {
 class CarFormState extends State<CarForm> {
   final _formKey = GlobalKey<FormState>();
 
-  final _typeOfCarController = TextEditingController();
-  final _numberOfCarController = TextEditingController();
-  final _chassisNumberController = TextEditingController();
-  final _makeController = TextEditingController();
-  final _modelController = TextEditingController();
-  final _colorController = TextEditingController();
-  final _productionDateController = TextEditingController();
+  final _contractNumberController = TextEditingController();
+  final _vehicleNumberController = TextEditingController();
+  final _shieldNumberController = TextEditingController();
+  final _manufacturerController = TextEditingController();
+  final _tradeNicknameController = TextEditingController();
+  final _colourController = TextEditingController();
+  final _yearOfmanufactureController = TextEditingController();
   final _engineCapacityController = TextEditingController();
+  final _notesController = TextEditingController();
 
   @override
   void dispose() {
-    _typeOfCarController.dispose();
-    _numberOfCarController.dispose();
-    _chassisNumberController.dispose();
-    _makeController.dispose();
-    _modelController.dispose();
-    _colorController.dispose();
-    _productionDateController.dispose();
+    _contractNumberController.dispose();
+    _vehicleNumberController.dispose();
+    _shieldNumberController.dispose();
+    _manufacturerController.dispose();
+    _tradeNicknameController.dispose();
+    _colourController.dispose();
+    _yearOfmanufactureController.dispose();
     _engineCapacityController.dispose();
+    _notesController.dispose();
+
     super.dispose();
   }
 
   void _saveCar() async {
     if (_formKey.currentState!.validate()) {
       final car = Car(
-        id: FirebaseFirestore.instance.collection('cars').doc().id,
-        typeOfCar: _typeOfCarController.text,
-        numberOfCar: int.parse(_numberOfCarController.text),
-        chassisNumber: _chassisNumberController.text,
-        make: _makeController.text,
-        model: _modelController.text,
-        color: _colorController.text,
-        productionDate: DateTime(
-            int.parse(_productionDateController.text)), // Using only the year
-        engineCapacity: double.parse(_engineCapacityController.text),
-      );
+          id: FirebaseFirestore.instance.collection('cars').doc().id,
+          contractNumber: _contractNumberController.text,
+          vehicleNumber: int.parse(_vehicleNumberController.text),
+          shieldNumber: _shieldNumberController.text,
+          manufacturer: _manufacturerController.text,
+          tradeNickname: _tradeNicknameController.text,
+          colour: _colourController.text,
+          yearOfmanufacture: DateTime(int.parse(
+              _yearOfmanufactureController.text)), // Using only the year
+          engineCapacity: double.parse(_engineCapacityController.text),
+          notes: _notesController.text);
       await DatabaseHelper().insertCar(car);
 
+      if (!mounted) return; // Check if widget is still mounted
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Car saved successfully!'),
@@ -65,14 +69,15 @@ class CarFormState extends State<CarForm> {
 
   void _clearFields() {
     setState(() {
-      _typeOfCarController.clear();
-      _numberOfCarController.clear();
-      _chassisNumberController.clear();
-      _makeController.clear();
-      _modelController.clear();
-      _colorController.clear();
-      _productionDateController.clear();
+      _contractNumberController.clear();
+      _vehicleNumberController.clear();
+      _shieldNumberController.clear();
+      _manufacturerController.clear();
+      _tradeNicknameController.clear();
+      _colourController.clear();
+      _yearOfmanufactureController.clear();
       _engineCapacityController.clear();
+      _notesController.clear();
     });
   }
 
@@ -83,7 +88,7 @@ class CarFormState extends State<CarForm> {
         title: const Text(
           'Cars Manager',
           style: TextStyle(
-            color: Colors.blueAccent,
+            color: Color(0xff973131),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -95,49 +100,49 @@ class CarFormState extends State<CarForm> {
           child: ListView(
             children: [
               TextFormField(
-                controller: _typeOfCarController,
-                decoration: const InputDecoration(labelText: 'Type of Car'),
+                controller: _contractNumberController,
+                decoration: const InputDecoration(labelText: 'Contract Number'),
                 validator: (value) =>
-                    value!.isEmpty ? 'Enter the car type' : null,
+                    value!.isEmpty ? 'Enter the Contract Number' : null,
               ),
               TextFormField(
-                controller: _numberOfCarController,
-                decoration: const InputDecoration(labelText: 'Number of Car'),
+                controller: _vehicleNumberController,
+                decoration: const InputDecoration(labelText: 'Vehicle Number '),
                 keyboardType: TextInputType.number,
                 validator: (value) =>
-                    value!.isEmpty ? 'Enter the car number' : null,
+                    value!.isEmpty ? 'Enter the Vehicle Number ' : null,
               ),
               TextFormField(
-                controller: _chassisNumberController,
-                decoration: const InputDecoration(labelText: 'Chassis Number'),
+                controller: _shieldNumberController,
+                decoration: const InputDecoration(labelText: 'Shield Number'),
                 validator: (value) =>
-                    value!.isEmpty ? 'Enter the chassis number' : null,
+                    value!.isEmpty ? 'Enter the Shield Number' : null,
               ),
               TextFormField(
-                controller: _makeController,
-                decoration: const InputDecoration(labelText: 'Make'),
+                controller: _manufacturerController,
+                decoration: const InputDecoration(labelText: 'Manufacturer'),
                 validator: (value) =>
-                    value!.isEmpty ? 'Enter the car make' : null,
+                    value!.isEmpty ? 'Enter the car Manufacturer' : null,
               ),
               TextFormField(
-                controller: _modelController,
-                decoration: const InputDecoration(labelText: 'Model'),
+                controller: _tradeNicknameController,
+                decoration: const InputDecoration(labelText: 'Trade Nickname'),
                 validator: (value) =>
-                    value!.isEmpty ? 'Enter the car model' : null,
+                    value!.isEmpty ? 'Enter the car Trade Nickname' : null,
               ),
               TextFormField(
-                controller: _colorController,
-                decoration: const InputDecoration(labelText: 'Color'),
+                controller: _colourController,
+                decoration: const InputDecoration(labelText: 'Colour'),
                 validator: (value) =>
-                    value!.isEmpty ? 'Enter the car color' : null,
+                    value!.isEmpty ? 'Enter the car colour' : null,
               ),
               TextFormField(
-                controller: _productionDateController,
+                controller: _yearOfmanufactureController,
                 decoration: const InputDecoration(
-                    labelText: 'Production Year (YYYY)'), // Updated label
+                    labelText: 'Year of manufacture'), // Updated label
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Enter the production year';
+                    return 'Enter the Year of Manufacture';
                   } else if (int.tryParse(value) == null || value.length != 4) {
                     return 'Enter a valid year';
                   }
@@ -154,6 +159,12 @@ class CarFormState extends State<CarForm> {
                 validator: (value) =>
                     value!.isEmpty ? 'Enter the engine capacity' : null,
               ),
+              TextFormField(
+                controller: _notesController,
+                decoration: const InputDecoration(labelText: 'Notes'),
+                validator: (value) =>
+                    value!.isEmpty ? 'Enter the car Notes' : null,
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveCar,
@@ -169,7 +180,7 @@ class CarFormState extends State<CarForm> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CarsTable()),
+                    MaterialPageRoute(builder: (context) => const CarsTable()),
                   );
                 },
                 child: const Text('Go to Cars Table'),

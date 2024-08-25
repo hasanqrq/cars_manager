@@ -4,13 +4,13 @@ import 'car.dart';
 import 'package:intl/intl.dart';
 
 class CarsTable extends StatefulWidget {
-  const CarsTable({Key? key}) : super(key: key);
+  const CarsTable({super.key});
 
   @override
-  _CarsTableState createState() => _CarsTableState();
+  CarsTableState createState() => CarsTableState();
 }
 
-class _CarsTableState extends State<CarsTable> {
+class CarsTableState extends State<CarsTable> {
   List<Car>? _cars;
   String searchQuery = ""; // Variable to hold the search query
 
@@ -22,6 +22,10 @@ class _CarsTableState extends State<CarsTable> {
 
   void _refreshCars() async {
     final cars = await DatabaseHelper().getCars();
+    debugPrint('Fetched cars: ${cars.length}'); // Debugging line
+
+    if (!mounted) return; // Check if widget is still mounted
+
     setState(() {
       _cars = cars;
     });
@@ -29,11 +33,15 @@ class _CarsTableState extends State<CarsTable> {
 
   void _deleteCar(String id) async {
     await DatabaseHelper().deleteCar(id);
+
+    if (!mounted) return; // Check if widget is still mounted
+
     setState(() {
       _cars = _cars?.where((car) => car.id != id).toList();
     });
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Car deleted successfully!'),
         duration: Duration(seconds: 3),
       ),
@@ -46,14 +54,16 @@ class _CarsTableState extends State<CarsTable> {
       return cars;
     } else {
       return cars.where((car) {
-        return car.typeOfCar
+        return car.contractNumber
                 .toLowerCase()
                 .contains(searchQuery.toLowerCase()) ||
-            car.chassisNumber
+            car.shieldNumber
                 .toLowerCase()
                 .contains(searchQuery.toLowerCase()) ||
-            car.make.toLowerCase().contains(searchQuery.toLowerCase()) ||
-            car.model.toLowerCase().contains(searchQuery.toLowerCase());
+            car.manufacturer
+                .toLowerCase()
+                .contains(searchQuery.toLowerCase()) ||
+            car.tradeNickname.toLowerCase().contains(searchQuery.toLowerCase());
       }).toList();
     }
   }
@@ -62,7 +72,9 @@ class _CarsTableState extends State<CarsTable> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Stored Cars'),
+        title: const Text(
+          'Stored Cars',
+        ),
       ),
       body: Column(
         children: [
@@ -70,7 +82,8 @@ class _CarsTableState extends State<CarsTable> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               decoration: const InputDecoration(
-                labelText: 'Search by Type, Chassis Number, Make, or Model',
+                labelText:
+                    'Search by Type, Shield Number, Trade Nickname, or Contract Number',
                 border: OutlineInputBorder(),
               ),
               onChanged: (query) {
@@ -91,30 +104,32 @@ class _CarsTableState extends State<CarsTable> {
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
                             columns: const [
-                              DataColumn(label: Text('Type')),
-                              DataColumn(label: Text('Number')),
-                              DataColumn(label: Text('Chassis Number')),
-                              DataColumn(label: Text('Make')),
-                              DataColumn(label: Text('Model')),
-                              DataColumn(label: Text('Color')),
-                              DataColumn(label: Text('Production Date')),
+                              DataColumn(label: Text('Contract Number')),
+                              DataColumn(label: Text('Vehicle Number ')),
+                              DataColumn(label: Text('Shield Number ')),
+                              DataColumn(label: Text('Manufacturer')),
+                              DataColumn(label: Text('Trade Nickname')),
+                              DataColumn(label: Text('Colour')),
+                              DataColumn(label: Text('Year of manufacture')),
                               DataColumn(label: Text('Engine Capacity')),
+                              DataColumn(label: Text('Notes')),
                               DataColumn(label: Text('Actions')),
                             ],
                             rows: _filterCars(_cars!).map((car) {
                               final String formattedDate = DateFormat.y().format(
-                                  car.productionDate); // Format date to show only the year
+                                  car.yearOfmanufacture); // Format date to show only the year
                               return DataRow(
                                 cells: [
-                                  DataCell(Text(car.typeOfCar)),
-                                  DataCell(Text(car.numberOfCar.toString())),
-                                  DataCell(Text(car.chassisNumber)),
-                                  DataCell(Text(car.make)),
-                                  DataCell(Text(car.model)),
-                                  DataCell(Text(car.color)),
+                                  DataCell(Text(car.contractNumber)),
+                                  DataCell(Text(car.vehicleNumber.toString())),
+                                  DataCell(Text(car.shieldNumber)),
+                                  DataCell(Text(car.manufacturer)),
+                                  DataCell(Text(car.tradeNickname)),
+                                  DataCell(Text(car.colour)),
                                   DataCell(Text(
                                       formattedDate)), // Display only the year
                                   DataCell(Text(car.engineCapacity.toString())),
+                                  DataCell(Text(car.notes)),
                                   DataCell(
                                     IconButton(
                                       icon: const Icon(Icons.delete,
