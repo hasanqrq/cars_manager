@@ -72,7 +72,12 @@ class WelcomeScreenState extends State<WelcomeScreen> {
                   MaterialPageRoute(builder: (context) => const CarForm()),
                 );
               },
-              child: const Text('Go to Car Form'),
+              child: const Text(
+                'Go to Car Form',
+                style: TextStyle(
+                  color: Color(0xffE0A75E),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -82,17 +87,32 @@ class WelcomeScreenState extends State<WelcomeScreen> {
                   MaterialPageRoute(builder: (context) => const CarsTable()),
                 );
               },
-              child: const Text('Go to Car Table'),
+              child: const Text(
+                'Go to Car Table',
+                style: TextStyle(
+                  color: Color(0xffE0A75E),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _exportDatabase(),
-              child: const Text('Export Database'),
+              child: const Text(
+                'Export Database',
+                style: TextStyle(
+                  color: Color(0xffE0A75E),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _importDatabase(),
-              child: const Text('Import Database'),
+              child: const Text(
+                'Import Database',
+                style: TextStyle(
+                  color: Color(0xffE0A75E),
+                ),
+              ),
             ),
           ],
         ),

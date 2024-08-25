@@ -74,6 +74,11 @@ class CarsTableState extends State<CarsTable> {
       appBar: AppBar(
         title: const Text(
           'Stored Cars',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: Color(0xff973131),
+          ),
         ),
       ),
       body: Column(

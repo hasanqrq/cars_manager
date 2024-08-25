@@ -168,12 +168,22 @@ class CarFormState extends State<CarForm> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveCar,
-                child: const Text('Save Car'),
+                child: const Text(
+                  'Save Car',
+                  style: TextStyle(
+                    color: Color(0xffE0A75E),
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _clearFields,
-                child: const Text('Clear Data'),
+                child: const Text(
+                  'Clear Data',
+                  style: TextStyle(
+                    color: Color(0xffE0A75E),
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -183,7 +193,12 @@ class CarFormState extends State<CarForm> {
                     MaterialPageRoute(builder: (context) => const CarsTable()),
                   );
                 },
-                child: const Text('Go to Cars Table'),
+                child: const Text(
+                  'Go to Cars Table',
+                  style: TextStyle(
+                    color: Color(0xffE0A75E),
+                  ),
+                ),
               ),
             ],
           ),
