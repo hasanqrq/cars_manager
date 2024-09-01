@@ -286,71 +286,80 @@ class CarsTableState extends State<CarsTable> {
 Future<void> generateAndPrintArabicPdf(List<Car> cars) async {
   final pw.Document pdf = pw.Document();
 
+  // Load the Arabic font
   var arabicFont =
       pw.Font.ttf(await rootBundle.load("assets/fonts/Cairo-Regular.ttf"));
 
-  pdf.addPage(pw.Page(
-    pageFormat:
-        PdfPageFormat.a4.landscape, // Set the page format to A4 landscape
-    theme: pw.ThemeData.withFont(
-      base: arabicFont,
+  pdf.addPage(
+    pw.Page(
+      pageFormat:
+          PdfPageFormat.a4.landscape, // Set the page format to A4 landscape
+      theme: pw.ThemeData.withFont(
+        base: arabicFont,
+      ),
+      build: (pw.Context context) {
+        return pw.Center(
+          // Center the table within the page
+          child: pw.Container(
+            width: double.infinity, // Make the table take full width
+            height: double.infinity, // Make the table take full height
+            child: pw.Table.fromTextArray(
+              headers: [
+                'Contract Number',
+                'Vehicle Number',
+                'Shield Number',
+                'Manufacturer',
+                'Trade Nickname',
+                'Colour',
+                'Year of Manufacture',
+                'Engine Capacity',
+                'Cost Price',
+                'Sell Price',
+                'Notes'
+              ],
+              data: cars.map((car) {
+                return [
+                  _getDirectionality(car.contractNumber, arabicFont),
+                  _getDirectionality(car.vehicleNumber.toString(), arabicFont),
+                  _getDirectionality(car.shieldNumber, arabicFont),
+                  _getDirectionality(car.manufacturer, arabicFont),
+                  _getDirectionality(car.tradeNickname, arabicFont),
+                  _getDirectionality(car.colour, arabicFont),
+                  _getDirectionality(
+                      DateFormat.y().format(car.yearOfmanufacture), arabicFont),
+                  _getDirectionality(car.engineCapacity.toString(), arabicFont),
+                  _getDirectionality(car.costPrice.toString(), arabicFont),
+                  _getDirectionality(car.sellPrice.toString(), arabicFont),
+                  _getDirectionality(car.notes, arabicFont),
+                ];
+              }).toList(),
+              cellStyle: pw.TextStyle(font: arabicFont),
+              headerStyle: pw.TextStyle(
+                  font: arabicFont, fontWeight: pw.FontWeight.bold),
+              headerDecoration:
+                  const pw.BoxDecoration(color: PdfColors.grey300),
+              cellAlignment:
+                  pw.Alignment.center, // Center the text in each cell
+              columnWidths: {
+                0: pw
+                    .FlexColumnWidth(), // Adjust the width of columns as needed
+                1: pw.FlexColumnWidth(),
+                2: pw.FlexColumnWidth(),
+                3: pw.FlexColumnWidth(),
+                4: pw.FlexColumnWidth(),
+                5: pw.FlexColumnWidth(),
+                6: pw.FlexColumnWidth(),
+                7: pw.FlexColumnWidth(),
+                8: pw.FlexColumnWidth(),
+                9: pw.FlexColumnWidth(),
+                10: pw.FlexColumnWidth(),
+              },
+            ),
+          ),
+        );
+      },
     ),
-    build: (pw.Context context) {
-      return pw.Container(
-        width: double.infinity, // Make the table take full width
-        height: double.infinity, // Make the table take full height
-        child: pw.Table.fromTextArray(
-          headers: [
-            'Contract Number',
-            'Vehicle Number',
-            'Shield Number',
-            'Manufacturer',
-            'Trade Nickname',
-            'Colour',
-            'Year of Manufacture',
-            'Engine Capacity',
-            'Cost Price',
-            'Sell Price',
-            'Notes'
-          ],
-          data: cars.map((car) {
-            return [
-              _getDirectionality(car.contractNumber, arabicFont),
-              _getDirectionality(car.vehicleNumber.toString(), arabicFont),
-              _getDirectionality(car.shieldNumber, arabicFont),
-              _getDirectionality(car.manufacturer, arabicFont),
-              _getDirectionality(car.tradeNickname, arabicFont),
-              _getDirectionality(car.colour, arabicFont),
-              _getDirectionality(
-                  DateFormat.y().format(car.yearOfmanufacture), arabicFont),
-              _getDirectionality(car.engineCapacity.toString(), arabicFont),
-              _getDirectionality(car.costPrice.toString(), arabicFont),
-              _getDirectionality(car.sellPrice.toString(), arabicFont),
-              _getDirectionality(car.notes, arabicFont),
-            ];
-          }).toList(),
-          cellStyle: pw.TextStyle(font: arabicFont),
-          headerStyle:
-              pw.TextStyle(font: arabicFont, fontWeight: pw.FontWeight.bold),
-          headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
-          cellAlignment: pw.Alignment.centerRight,
-          columnWidths: {
-            0: pw.FlexColumnWidth(), // Adjust the width of columns as needed
-            1: pw.FlexColumnWidth(),
-            2: pw.FlexColumnWidth(),
-            3: pw.FlexColumnWidth(),
-            4: pw.FlexColumnWidth(),
-            5: pw.FlexColumnWidth(),
-            6: pw.FlexColumnWidth(),
-            7: pw.FlexColumnWidth(),
-            8: pw.FlexColumnWidth(),
-            9: pw.FlexColumnWidth(),
-            10: pw.FlexColumnWidth(),
-          },
-        ),
-      );
-    },
-  ));
+  );
 
   await Printing.layoutPdf(
     onLayout: (PdfPageFormat format) async => pdf.save(),

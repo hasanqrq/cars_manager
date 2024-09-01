@@ -1,3 +1,4 @@
+import 'package:cars_manager/cars_table.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'car.dart';
@@ -230,6 +231,21 @@ class CarFormState extends State<CarForm> {
                 onPressed: _clearFields,
                 child: const Text(
                   'Clear Data',
+                  style: TextStyle(
+                    color: Color(0xffE0A75E),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CarsTable()),
+                  );
+                },
+                child: const Text(
+                  'Go to Car Table',
                   style: TextStyle(
                     color: Color(0xffE0A75E),
                   ),

@@ -62,9 +62,13 @@ class WelcomeScreenState extends State<WelcomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Flexible(
-              child: Image.asset(
-                'assets/images/LogoTrans.png',
-                fit: BoxFit.contain,
+              child: Expanded(
+                child: Image.asset(
+                  'assets/images/LogoTrans.png',
+                  height: 300,
+                  width: 300,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -117,6 +121,16 @@ class WelcomeScreenState extends State<WelcomeScreen> {
                 ),
               ),
             ),
+            const SizedBox(
+              height: 100,
+            ),
+            const Text(
+              "Designed By Eng.Hasan Q",
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xffE0A75E),
+                  fontSize: 10),
+            )
           ],
         ),
       ),
