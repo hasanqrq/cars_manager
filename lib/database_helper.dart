@@ -11,6 +11,7 @@ class DatabaseHelper {
       await carsCollection.doc(car.id).set(car.toMap());
     } catch (e) {
       // Handle error here if needed
+      print('Error inserting car: $e');
     }
   }
 
@@ -28,6 +29,26 @@ class DatabaseHelper {
       }
     } catch (e) {
       // Handle error here if needed
+      print('Error fetching car by shield number: $e');
+    }
+    return null;
+  }
+
+  /// Fetches a car from Firestore using the vehicleNumber.
+  Future<Car?> getCarByVehicleNumber(int vehicleNumber) async {
+    try {
+      QuerySnapshot querySnapshot = await carsCollection
+          .where('vehicleNumber', isEqualTo: vehicleNumber)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return Car.fromMap(
+            querySnapshot.docs.first.data() as Map<String, dynamic>);
+      }
+    } catch (e) {
+      // Handle error here if needed
+      print('Error fetching car by vehicle number: $e');
     }
     return null;
   }
@@ -42,6 +63,7 @@ class DatabaseHelper {
           .toList();
     } catch (e) {
       // Handle error here if needed
+      print('Error fetching cars: $e');
       return [];
     }
   }
@@ -52,6 +74,7 @@ class DatabaseHelper {
       await carsCollection.doc(id).delete();
     } catch (e) {
       // Handle error here if needed
+      print('Error deleting car: $e');
     }
   }
 }

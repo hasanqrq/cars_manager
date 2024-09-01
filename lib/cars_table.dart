@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'car.dart';
+import 'car_form.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:flutter/services.dart' show rootBundle;
 
 class CarsTable extends StatefulWidget {
   const CarsTable({super.key});
@@ -48,6 +53,76 @@ class CarsTableState extends State<CarsTable> {
     );
   }
 
+  void _editCar(Car car) async {
+    // Navigate to the car form with the current car data for editing
+    final updatedCar = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            CarForm(car: car), // Assuming CarForm is updated to handle editing
+      ),
+    );
+
+    if (updatedCar != null) {
+      // If the car is updated, refresh the table
+      _refreshCars();
+    }
+  }
+
+  void _printTable() async {
+    // Load the Arabic font
+    final fontData = await rootBundle.load("assets/fonts/Cairo-Regular.ttf");
+    final ttf = pw.Font.ttf(fontData.buffer.asByteData());
+
+    // Generate a printable version of the table
+    final doc = pw.Document();
+
+    doc.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Table.fromTextArray(
+            headers: [
+              'Contract Number',
+              'Vehicle Number',
+              'Shield Number',
+              'Manufacturer',
+              'Trade Nickname',
+              'Colour',
+              'Year of Manufacture',
+              'Engine Capacity',
+              'Cost Price',
+              'Sell Price',
+              'Notes'
+            ],
+            data: _cars!.map((car) {
+              return [
+                car.contractNumber,
+                car.vehicleNumber.toString(),
+                car.shieldNumber,
+                car.manufacturer,
+                car.tradeNickname,
+                car.colour,
+                DateFormat.y().format(car.yearOfmanufacture),
+                car.engineCapacity.toString(),
+                car.costPrice.toString(),
+                car.sellPrice.toString(),
+                car.notes, // Directly print notes, assuming they are in Arabic or any other language
+              ];
+            }).toList(),
+            cellStyle: pw.TextStyle(font: ttf), // Apply the Arabic font
+            headerStyle:
+                pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold),
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => doc.save(),
+    );
+  }
+
   List<Car> _filterCars(List<Car> cars) {
     // Filter the list of cars based on the search query
     if (searchQuery.isEmpty) {
@@ -57,6 +132,9 @@ class CarsTableState extends State<CarsTable> {
         return car.contractNumber
                 .toLowerCase()
                 .contains(searchQuery.toLowerCase()) ||
+            car.vehicleNumber
+                .toString()
+                .contains(searchQuery) || // Added vehicleNumber search
             car.shieldNumber
                 .toLowerCase()
                 .contains(searchQuery.toLowerCase()) ||
@@ -80,6 +158,12 @@ class CarsTableState extends State<CarsTable> {
             color: Color(0xff973131),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.print),
+            onPressed: _printTable, // Add print button to app bar
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -88,7 +172,7 @@ class CarsTableState extends State<CarsTable> {
             child: TextField(
               decoration: const InputDecoration(
                 labelText:
-                    'Search by Type, Shield Number, Trade Nickname, or Contract Number',
+                    'Search by Vehicle Number, Contract Number, Shield Number, Trade Nickname, or Manufacturer',
                 border: OutlineInputBorder(),
               ),
               onChanged: (query) {
@@ -103,50 +187,79 @@ class CarsTableState extends State<CarsTable> {
                 ? const Center(child: CircularProgressIndicator())
                 : _cars!.isEmpty
                     ? const Center(child: Text('No cars found.'))
-                    : SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
+                    : Scrollbar(
+                        thumbVisibility: true,
                         child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            columns: const [
-                              DataColumn(label: Text('Contract Number')),
-                              DataColumn(label: Text('Vehicle Number ')),
-                              DataColumn(label: Text('Shield Number ')),
-                              DataColumn(label: Text('Manufacturer')),
-                              DataColumn(label: Text('Trade Nickname')),
-                              DataColumn(label: Text('Colour')),
-                              DataColumn(label: Text('Year of manufacture')),
-                              DataColumn(label: Text('Engine Capacity')),
-                              DataColumn(label: Text('Notes')),
-                              DataColumn(label: Text('Actions')),
-                            ],
-                            rows: _filterCars(_cars!).map((car) {
-                              final String formattedDate = DateFormat.y().format(
-                                  car.yearOfmanufacture); // Format date to show only the year
-                              return DataRow(
-                                cells: [
-                                  DataCell(Text(car.contractNumber)),
-                                  DataCell(Text(car.vehicleNumber.toString())),
-                                  DataCell(Text(car.shieldNumber)),
-                                  DataCell(Text(car.manufacturer)),
-                                  DataCell(Text(car.tradeNickname)),
-                                  DataCell(Text(car.colour)),
-                                  DataCell(Text(
-                                      formattedDate)), // Display only the year
-                                  DataCell(Text(car.engineCapacity.toString())),
-                                  DataCell(Text(car.notes)),
-                                  DataCell(
-                                    IconButton(
-                                      icon: const Icon(Icons.delete,
-                                          color: Colors.red),
-                                      onPressed: () {
-                                        _deleteCar(car.id);
-                                      },
-                                    ),
-                                  ),
+                          scrollDirection: Axis.vertical,
+                          child: Scrollbar(
+                            thumbVisibility: true,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: DataTable(
+                                columns: const [
+                                  DataColumn(label: Text('Contract Number')),
+                                  DataColumn(label: Text('Vehicle Number')),
+                                  DataColumn(label: Text('Shield Number')),
+                                  DataColumn(label: Text('Manufacturer')),
+                                  DataColumn(label: Text('Trade Nickname')),
+                                  DataColumn(label: Text('Colour')),
+                                  DataColumn(
+                                      label: Text('Year of Manufacture')),
+                                  DataColumn(label: Text('Engine Capacity')),
+                                  DataColumn(
+                                      label: Text('Cost Price')), // New column
+                                  DataColumn(
+                                      label: Text('Sell Price')), // New column
+                                  DataColumn(label: Text('Notes')),
+                                  DataColumn(label: Text('Actions')),
                                 ],
-                              );
-                            }).toList(),
+                                rows: _filterCars(_cars!).map((car) {
+                                  final String formattedDate = DateFormat.y()
+                                      .format(car
+                                          .yearOfmanufacture); // Format date to show only the year
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(Text(car.contractNumber)),
+                                      DataCell(
+                                          Text(car.vehicleNumber.toString())),
+                                      DataCell(Text(car.shieldNumber)),
+                                      DataCell(Text(car.manufacturer)),
+                                      DataCell(Text(car.tradeNickname)),
+                                      DataCell(Text(car.colour)),
+                                      DataCell(Text(
+                                          formattedDate)), // Display only the year
+                                      DataCell(
+                                          Text(car.engineCapacity.toString())),
+                                      DataCell(Text(car.costPrice
+                                          .toString())), // New field
+                                      DataCell(Text(car.sellPrice
+                                          .toString())), // New field
+                                      DataCell(Text(car.notes)),
+                                      DataCell(
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.edit,
+                                                  color: Colors.blue),
+                                              onPressed: () {
+                                                _editCar(car);
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.delete,
+                                                  color: Colors.red),
+                                              onPressed: () {
+                                                _deleteCar(car.id);
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
+                            ),
                           ),
                         ),
                       ),

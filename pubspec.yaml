@@ -1,36 +1,32 @@
 name: cars_manager
 description: "A new Flutter project."
 
-publish_to: 'none' 
-
+publish_to: 'none'
 
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.5.0
-
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  
   firebase_core: ^3.3.0
   cloud_firestore: ^5.2.1
   intl: ^0.17.0
   path_provider: ^2.0.11
   file_picker: ^5.0.0
-
-
-
+  printing: ^5.12.1
+  pdf: ^3.6.5
   cupertino_icons: ^1.0.8
+  arabic_tools: ^0.0.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-
   flutter_lints: ^4.0.0
-
-  flutter_launcher_icons: ^0.10.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter_icons:
   android: true
@@ -38,19 +34,11 @@ flutter_icons:
   macos: true
   web: true
   image_path: "assets/images/app_icon.png"
-  # Or use adaptive icons for Android
   android_adaptive_icon_background: "#ffffff"
   android_adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
 
 flutter:
-
-
-
   uses-material-design: true
-
- 
-    
-
   assets:
-    - assets/images/  # Add this line to include the images folder
-
+    - assets/images/
+    - assets/fonts/Cairo-Regular.ttf

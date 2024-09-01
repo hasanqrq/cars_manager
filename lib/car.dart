@@ -10,6 +10,8 @@ class Car {
   final DateTime yearOfmanufacture;
   final double engineCapacity;
   final String notes;
+  final double costPrice; // New field
+  final double sellPrice; // New field
 
   Car({
     required this.id,
@@ -22,6 +24,8 @@ class Car {
     required this.yearOfmanufacture,
     required this.engineCapacity,
     required this.notes,
+    required this.costPrice, // New field
+    required this.sellPrice, // New field
   });
 
   Map<String, dynamic> toMap() {
@@ -37,6 +41,8 @@ class Car {
       'yearOfmanufacture': yearOfmanufacture.toIso8601String(),
       'engineCapacity': engineCapacity,
       'notes': notes,
+      'costPrice': costPrice, // New field
+      'sellPrice': sellPrice, // New field
     };
   }
 
@@ -60,6 +66,10 @@ class Car {
           0.0, // Convert to double and add default value
       notes:
           map['notes'] ?? '', // Add default empty string to avoid null errors
+      costPrice: map['costPrice']?.toDouble() ??
+          0.0, // New field: Convert to double and add default value
+      sellPrice: map['sellPrice']?.toDouble() ??
+          0.0, // New field: Convert to double and add default value
     );
   }
 }

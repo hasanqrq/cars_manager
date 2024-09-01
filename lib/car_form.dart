@@ -1,11 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'database_helper.dart';
-import 'cars_table.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'car.dart';
+import 'database_helper.dart';
 
 class CarForm extends StatefulWidget {
-  const CarForm({super.key});
+  final Car? car; // Add this parameter to accept a Car object
+
+  const CarForm({Key? key, this.car}) : super(key: key);
 
   @override
   CarFormState createState() => CarFormState();
@@ -23,6 +24,28 @@ class CarFormState extends State<CarForm> {
   final _yearOfmanufactureController = TextEditingController();
   final _engineCapacityController = TextEditingController();
   final _notesController = TextEditingController();
+  final _costPriceController = TextEditingController(); // New field
+  final _sellPriceController = TextEditingController(); // New field
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.car != null) {
+      // If a car is passed, pre-fill the form fields
+      _contractNumberController.text = widget.car!.contractNumber;
+      _vehicleNumberController.text = widget.car!.vehicleNumber.toString();
+      _shieldNumberController.text = widget.car!.shieldNumber;
+      _manufacturerController.text = widget.car!.manufacturer;
+      _tradeNicknameController.text = widget.car!.tradeNickname;
+      _colourController.text = widget.car!.colour;
+      _yearOfmanufactureController.text =
+          widget.car!.yearOfmanufacture.year.toString();
+      _engineCapacityController.text = widget.car!.engineCapacity.toString();
+      _notesController.text = widget.car!.notes;
+      _costPriceController.text = widget.car!.costPrice.toString();
+      _sellPriceController.text = widget.car!.sellPrice.toString();
+    }
+  }
 
   @override
   void dispose() {
@@ -35,6 +58,8 @@ class CarFormState extends State<CarForm> {
     _yearOfmanufactureController.dispose();
     _engineCapacityController.dispose();
     _notesController.dispose();
+    _costPriceController.dispose();
+    _sellPriceController.dispose();
 
     super.dispose();
   }
@@ -42,17 +67,24 @@ class CarFormState extends State<CarForm> {
   void _saveCar() async {
     if (_formKey.currentState!.validate()) {
       final car = Car(
-          id: FirebaseFirestore.instance.collection('cars').doc().id,
-          contractNumber: _contractNumberController.text,
-          vehicleNumber: int.parse(_vehicleNumberController.text),
-          shieldNumber: _shieldNumberController.text,
-          manufacturer: _manufacturerController.text,
-          tradeNickname: _tradeNicknameController.text,
-          colour: _colourController.text,
-          yearOfmanufacture: DateTime(int.parse(
-              _yearOfmanufactureController.text)), // Using only the year
-          engineCapacity: double.parse(_engineCapacityController.text),
-          notes: _notesController.text);
+        id: widget.car?.id ??
+            FirebaseFirestore.instance
+                .collection('cars')
+                .doc()
+                .id, // Use existing ID if editing
+        contractNumber: _contractNumberController.text,
+        vehicleNumber: int.parse(_vehicleNumberController.text),
+        shieldNumber: _shieldNumberController.text,
+        manufacturer: _manufacturerController.text,
+        tradeNickname: _tradeNicknameController.text,
+        colour: _colourController.text,
+        yearOfmanufacture: DateTime(int.parse(
+            _yearOfmanufactureController.text)), // Using only the year
+        engineCapacity: double.parse(_engineCapacityController.text),
+        notes: _notesController.text,
+        costPrice: double.parse(_costPriceController.text), // New field
+        sellPrice: double.parse(_sellPriceController.text), // New field
+      );
       await DatabaseHelper().insertCar(car);
 
       if (!mounted) return; // Check if widget is still mounted
@@ -63,7 +95,7 @@ class CarFormState extends State<CarForm> {
         ),
       );
 
-      _clearFields();
+      Navigator.pop(context, car); // Return the car object to refresh the table
     }
   }
 
@@ -78,6 +110,8 @@ class CarFormState extends State<CarForm> {
       _yearOfmanufactureController.clear();
       _engineCapacityController.clear();
       _notesController.clear();
+      _costPriceController.clear();
+      _sellPriceController.clear();
     });
   }
 
@@ -107,10 +141,10 @@ class CarFormState extends State<CarForm> {
               ),
               TextFormField(
                 controller: _vehicleNumberController,
-                decoration: const InputDecoration(labelText: 'Vehicle Number '),
+                decoration: const InputDecoration(labelText: 'Vehicle Number'),
                 keyboardType: TextInputType.number,
                 validator: (value) =>
-                    value!.isEmpty ? 'Enter the Vehicle Number ' : null,
+                    value!.isEmpty ? 'Enter the Vehicle Number' : null,
               ),
               TextFormField(
                 controller: _shieldNumberController,
@@ -138,8 +172,8 @@ class CarFormState extends State<CarForm> {
               ),
               TextFormField(
                 controller: _yearOfmanufactureController,
-                decoration: const InputDecoration(
-                    labelText: 'Year of manufacture'), // Updated label
+                decoration:
+                    const InputDecoration(labelText: 'Year of manufacture'),
                 validator: (value) {
                   if (value!.isEmpty) {
                     return 'Enter the Year of Manufacture';
@@ -165,6 +199,22 @@ class CarFormState extends State<CarForm> {
                 validator: (value) =>
                     value!.isEmpty ? 'Enter the car Notes' : null,
               ),
+              TextFormField(
+                controller: _costPriceController,
+                decoration: const InputDecoration(labelText: 'Cost Price'),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                validator: (value) =>
+                    value!.isEmpty ? 'Enter the cost price' : null,
+              ),
+              TextFormField(
+                controller: _sellPriceController,
+                decoration: const InputDecoration(labelText: 'Sell Price'),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                validator: (value) =>
+                    value!.isEmpty ? 'Enter the sell price' : null,
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveCar,
@@ -180,21 +230,6 @@ class CarFormState extends State<CarForm> {
                 onPressed: _clearFields,
                 child: const Text(
                   'Clear Data',
-                  style: TextStyle(
-                    color: Color(0xffE0A75E),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CarsTable()),
-                  );
-                },
-                child: const Text(
-                  'Go to Cars Table',
                   style: TextStyle(
                     color: Color(0xffE0A75E),
                   ),
