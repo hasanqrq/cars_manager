@@ -70,57 +70,8 @@ class CarsTableState extends State<CarsTable> {
   }
 
   void _printTable() async {
-    // Load the Arabic font
-    final fontData = await rootBundle.load("assets/fonts/Cairo-Regular.ttf");
-    final ttf = pw.Font.ttf(fontData.buffer.asByteData());
-
-    // Generate a printable version of the table
-    final doc = pw.Document();
-
-    doc.addPage(
-      pw.Page(
-        build: (pw.Context context) {
-          return pw.Table.fromTextArray(
-            headers: [
-              'Contract Number',
-              'Vehicle Number',
-              'Shield Number',
-              'Manufacturer',
-              'Trade Nickname',
-              'Colour',
-              'Year of Manufacture',
-              'Engine Capacity',
-              'Cost Price',
-              'Sell Price',
-              'Notes'
-            ],
-            data: _cars!.map((car) {
-              return [
-                car.contractNumber,
-                car.vehicleNumber.toString(),
-                car.shieldNumber,
-                car.manufacturer,
-                car.tradeNickname,
-                car.colour,
-                DateFormat.y().format(car.yearOfmanufacture),
-                car.engineCapacity.toString(),
-                car.costPrice.toString(),
-                car.sellPrice.toString(),
-                car.notes, // Directly print notes, assuming they are in Arabic or any other language
-              ];
-            }).toList(),
-            cellStyle: pw.TextStyle(font: ttf), // Apply the Arabic font
-            headerStyle:
-                pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold),
-            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
-          );
-        },
-      ),
-    );
-
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => doc.save(),
-    );
+    // Generate and print the PDF
+    await generateAndPrintArabicPdf(_cars ?? []);
   }
 
   List<Car> _filterCars(List<Car> cars) {
@@ -268,4 +219,148 @@ class CarsTableState extends State<CarsTable> {
       ),
     );
   }
+}
+
+// Function to generate and print a PDF with Arabic text
+// Future<void> generateAndPrintArabicPdf(List<Car> cars) async {
+//   final pw.Document pdf = pw.Document();
+
+//   var arabicFont =
+//       pw.Font.ttf(await rootBundle.load("assets/fonts/Cairo-Regular.ttf"));
+
+//   pdf.addPage(pw.Page(
+//     theme: pw.ThemeData.withFont(
+//       base: arabicFont,
+//     ),
+//     build: (pw.Context context) {
+//       return pw.Table.fromTextArray(
+//         headers: [
+//           'Contract Number',
+//           'Vehicle Number',
+//           'Shield Number',
+//           'Manufacturer',
+//           'Trade Nickname',
+//           'Colour',
+//           'Year of Manufacture',
+//           'Engine Capacity',
+//           'Cost Price',
+//           'Sell Price',
+//           'Notes'
+//         ],
+//         data: cars.map((car) {
+//           return [
+//             _getDirectionality(car.contractNumber, arabicFont),
+//             _getDirectionality(car.vehicleNumber.toString(), arabicFont),
+//             _getDirectionality(car.shieldNumber, arabicFont),
+//             _getDirectionality(car.manufacturer, arabicFont),
+//             _getDirectionality(car.tradeNickname, arabicFont),
+//             _getDirectionality(car.colour, arabicFont),
+//             _getDirectionality(
+//                 DateFormat.y().format(car.yearOfmanufacture), arabicFont),
+//             _getDirectionality(car.engineCapacity.toString(), arabicFont),
+//             _getDirectionality(car.costPrice.toString(), arabicFont),
+//             _getDirectionality(car.sellPrice.toString(), arabicFont),
+//             _getDirectionality(car.notes, arabicFont),
+//           ];
+//         }).toList(),
+//         cellStyle: pw.TextStyle(font: arabicFont),
+//         headerStyle:
+//             pw.TextStyle(font: arabicFont, fontWeight: pw.FontWeight.bold),
+//         headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
+//       );
+//     },
+//   ));
+
+//   await Printing.layoutPdf(
+//     onLayout: (PdfPageFormat format) async => pdf.save(),
+//   );
+// }
+
+// pw.Widget _getDirectionality(String text, pw.Font font) {
+//   final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(text);
+//   return pw.Directionality(
+//     textDirection: isArabic ? pw.TextDirection.rtl : pw.TextDirection.ltr,
+//     child: pw.Text(text, style: pw.TextStyle(font: font)),
+//   );
+// }
+Future<void> generateAndPrintArabicPdf(List<Car> cars) async {
+  final pw.Document pdf = pw.Document();
+
+  var arabicFont =
+      pw.Font.ttf(await rootBundle.load("assets/fonts/Cairo-Regular.ttf"));
+
+  pdf.addPage(pw.Page(
+    pageFormat:
+        PdfPageFormat.a4.landscape, // Set the page format to A4 landscape
+    theme: pw.ThemeData.withFont(
+      base: arabicFont,
+    ),
+    build: (pw.Context context) {
+      return pw.Container(
+        width: double.infinity, // Make the table take full width
+        height: double.infinity, // Make the table take full height
+        child: pw.Table.fromTextArray(
+          headers: [
+            'Contract Number',
+            'Vehicle Number',
+            'Shield Number',
+            'Manufacturer',
+            'Trade Nickname',
+            'Colour',
+            'Year of Manufacture',
+            'Engine Capacity',
+            'Cost Price',
+            'Sell Price',
+            'Notes'
+          ],
+          data: cars.map((car) {
+            return [
+              _getDirectionality(car.contractNumber, arabicFont),
+              _getDirectionality(car.vehicleNumber.toString(), arabicFont),
+              _getDirectionality(car.shieldNumber, arabicFont),
+              _getDirectionality(car.manufacturer, arabicFont),
+              _getDirectionality(car.tradeNickname, arabicFont),
+              _getDirectionality(car.colour, arabicFont),
+              _getDirectionality(
+                  DateFormat.y().format(car.yearOfmanufacture), arabicFont),
+              _getDirectionality(car.engineCapacity.toString(), arabicFont),
+              _getDirectionality(car.costPrice.toString(), arabicFont),
+              _getDirectionality(car.sellPrice.toString(), arabicFont),
+              _getDirectionality(car.notes, arabicFont),
+            ];
+          }).toList(),
+          cellStyle: pw.TextStyle(font: arabicFont),
+          headerStyle:
+              pw.TextStyle(font: arabicFont, fontWeight: pw.FontWeight.bold),
+          headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
+          cellAlignment: pw.Alignment.centerRight,
+          columnWidths: {
+            0: pw.FlexColumnWidth(), // Adjust the width of columns as needed
+            1: pw.FlexColumnWidth(),
+            2: pw.FlexColumnWidth(),
+            3: pw.FlexColumnWidth(),
+            4: pw.FlexColumnWidth(),
+            5: pw.FlexColumnWidth(),
+            6: pw.FlexColumnWidth(),
+            7: pw.FlexColumnWidth(),
+            8: pw.FlexColumnWidth(),
+            9: pw.FlexColumnWidth(),
+            10: pw.FlexColumnWidth(),
+          },
+        ),
+      );
+    },
+  ));
+
+  await Printing.layoutPdf(
+    onLayout: (PdfPageFormat format) async => pdf.save(),
+  );
+}
+
+pw.Widget _getDirectionality(String text, pw.Font font) {
+  final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(text);
+  return pw.Directionality(
+    textDirection: isArabic ? pw.TextDirection.rtl : pw.TextDirection.ltr,
+    child: pw.Text(text, style: pw.TextStyle(font: font)),
+  );
 }
