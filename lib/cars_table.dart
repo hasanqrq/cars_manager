@@ -17,7 +17,9 @@ class CarsTable extends StatefulWidget {
 
 class CarsTableState extends State<CarsTable> {
   List<Car>? _cars;
-  String searchQuery = ""; // Variable to hold the search query
+  String searchQuery = "";
+  final ScrollController _verticalScrollController = ScrollController();
+  final ScrollController _horizontalScrollController = ScrollController();
 
   @override
   void initState() {
@@ -27,9 +29,9 @@ class CarsTableState extends State<CarsTable> {
 
   void _refreshCars() async {
     final cars = await DatabaseHelper().getCars();
-    debugPrint('Fetched cars: ${cars.length}'); // Debugging line
+    debugPrint('Fetched cars: ${cars.length}');
 
-    if (!mounted) return; // Check if widget is still mounted
+    if (!mounted) return;
 
     setState(() {
       _cars = cars;
@@ -39,7 +41,7 @@ class CarsTableState extends State<CarsTable> {
   void _deleteCar(String id) async {
     await DatabaseHelper().deleteCar(id);
 
-    if (!mounted) return; // Check if widget is still mounted
+    if (!mounted) return;
 
     setState(() {
       _cars = _cars?.where((car) => car.id != id).toList();
@@ -54,28 +56,23 @@ class CarsTableState extends State<CarsTable> {
   }
 
   void _editCar(Car car) async {
-    // Navigate to the car form with the current car data for editing
     final updatedCar = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            CarForm(car: car), // Assuming CarForm is updated to handle editing
+        builder: (context) => CarForm(car: car),
       ),
     );
 
     if (updatedCar != null) {
-      // If the car is updated, refresh the table
       _refreshCars();
     }
   }
 
   void _printTable() async {
-    // Generate and print the PDF
     await generateAndPrintArabicPdf(_cars ?? []);
   }
 
   List<Car> _filterCars(List<Car> cars) {
-    // Filter the list of cars based on the search query
     if (searchQuery.isEmpty) {
       return cars;
     } else {
@@ -83,9 +80,7 @@ class CarsTableState extends State<CarsTable> {
         return car.contractNumber
                 .toLowerCase()
                 .contains(searchQuery.toLowerCase()) ||
-            car.vehicleNumber
-                .toString()
-                .contains(searchQuery) || // Added vehicleNumber search
+            car.vehicleNumber.toString().contains(searchQuery) ||
             car.shieldNumber
                 .toLowerCase()
                 .contains(searchQuery.toLowerCase()) ||
@@ -112,7 +107,7 @@ class CarsTableState extends State<CarsTable> {
         actions: [
           IconButton(
             icon: const Icon(Icons.print),
-            onPressed: _printTable, // Add print button to app bar
+            onPressed: _printTable,
           ),
         ],
       ),
@@ -139,12 +134,16 @@ class CarsTableState extends State<CarsTable> {
                 : _cars!.isEmpty
                     ? const Center(child: Text('No cars found.'))
                     : Scrollbar(
+                        controller: _verticalScrollController,
                         thumbVisibility: true,
                         child: SingleChildScrollView(
+                          controller: _verticalScrollController,
                           scrollDirection: Axis.vertical,
                           child: Scrollbar(
+                            controller: _horizontalScrollController,
                             thumbVisibility: true,
                             child: SingleChildScrollView(
+                              controller: _horizontalScrollController,
                               scrollDirection: Axis.horizontal,
                               child: DataTable(
                                 columns: const [
@@ -157,17 +156,14 @@ class CarsTableState extends State<CarsTable> {
                                   DataColumn(
                                       label: Text('Year of Manufacture')),
                                   DataColumn(label: Text('Engine Capacity')),
-                                  DataColumn(
-                                      label: Text('Cost Price')), // New column
-                                  DataColumn(
-                                      label: Text('Sell Price')), // New column
+                                  DataColumn(label: Text('Cost Price')),
+                                  DataColumn(label: Text('Sell Price')),
                                   DataColumn(label: Text('Notes')),
                                   DataColumn(label: Text('Actions')),
                                 ],
                                 rows: _filterCars(_cars!).map((car) {
                                   final String formattedDate = DateFormat.y()
-                                      .format(car
-                                          .yearOfmanufacture); // Format date to show only the year
+                                      .format(car.yearOfmanufacture);
                                   return DataRow(
                                     cells: [
                                       DataCell(Text(car.contractNumber)),
@@ -177,14 +173,11 @@ class CarsTableState extends State<CarsTable> {
                                       DataCell(Text(car.manufacturer)),
                                       DataCell(Text(car.tradeNickname)),
                                       DataCell(Text(car.colour)),
-                                      DataCell(Text(
-                                          formattedDate)), // Display only the year
+                                      DataCell(Text(formattedDate)),
                                       DataCell(
                                           Text(car.engineCapacity.toString())),
-                                      DataCell(Text(car.costPrice
-                                          .toString())), // New field
-                                      DataCell(Text(car.sellPrice
-                                          .toString())), // New field
+                                      DataCell(Text(car.costPrice.toString())),
+                                      DataCell(Text(car.sellPrice.toString())),
                                       DataCell(Text(car.notes)),
                                       DataCell(
                                         Row(
@@ -221,88 +214,23 @@ class CarsTableState extends State<CarsTable> {
   }
 }
 
-// Function to generate and print a PDF with Arabic text
-// Future<void> generateAndPrintArabicPdf(List<Car> cars) async {
-//   final pw.Document pdf = pw.Document();
-
-//   var arabicFont =
-//       pw.Font.ttf(await rootBundle.load("assets/fonts/Cairo-Regular.ttf"));
-
-//   pdf.addPage(pw.Page(
-//     theme: pw.ThemeData.withFont(
-//       base: arabicFont,
-//     ),
-//     build: (pw.Context context) {
-//       return pw.Table.fromTextArray(
-//         headers: [
-//           'Contract Number',
-//           'Vehicle Number',
-//           'Shield Number',
-//           'Manufacturer',
-//           'Trade Nickname',
-//           'Colour',
-//           'Year of Manufacture',
-//           'Engine Capacity',
-//           'Cost Price',
-//           'Sell Price',
-//           'Notes'
-//         ],
-//         data: cars.map((car) {
-//           return [
-//             _getDirectionality(car.contractNumber, arabicFont),
-//             _getDirectionality(car.vehicleNumber.toString(), arabicFont),
-//             _getDirectionality(car.shieldNumber, arabicFont),
-//             _getDirectionality(car.manufacturer, arabicFont),
-//             _getDirectionality(car.tradeNickname, arabicFont),
-//             _getDirectionality(car.colour, arabicFont),
-//             _getDirectionality(
-//                 DateFormat.y().format(car.yearOfmanufacture), arabicFont),
-//             _getDirectionality(car.engineCapacity.toString(), arabicFont),
-//             _getDirectionality(car.costPrice.toString(), arabicFont),
-//             _getDirectionality(car.sellPrice.toString(), arabicFont),
-//             _getDirectionality(car.notes, arabicFont),
-//           ];
-//         }).toList(),
-//         cellStyle: pw.TextStyle(font: arabicFont),
-//         headerStyle:
-//             pw.TextStyle(font: arabicFont, fontWeight: pw.FontWeight.bold),
-//         headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
-//       );
-//     },
-//   ));
-
-//   await Printing.layoutPdf(
-//     onLayout: (PdfPageFormat format) async => pdf.save(),
-//   );
-// }
-
-// pw.Widget _getDirectionality(String text, pw.Font font) {
-//   final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(text);
-//   return pw.Directionality(
-//     textDirection: isArabic ? pw.TextDirection.rtl : pw.TextDirection.ltr,
-//     child: pw.Text(text, style: pw.TextStyle(font: font)),
-//   );
-// }
 Future<void> generateAndPrintArabicPdf(List<Car> cars) async {
   final pw.Document pdf = pw.Document();
 
-  // Load the Arabic font
   var arabicFont =
       pw.Font.ttf(await rootBundle.load("assets/fonts/Cairo-Regular.ttf"));
 
   pdf.addPage(
     pw.Page(
-      pageFormat:
-          PdfPageFormat.a4.landscape, // Set the page format to A4 landscape
+      pageFormat: PdfPageFormat.a4.landscape,
       theme: pw.ThemeData.withFont(
         base: arabicFont,
       ),
       build: (pw.Context context) {
         return pw.Center(
-          // Center the table within the page
           child: pw.Container(
-            width: double.infinity, // Make the table take full width
-            height: double.infinity, // Make the table take full height
+            width: double.infinity,
+            height: double.infinity,
             child: pw.Table.fromTextArray(
               headers: [
                 'Contract Number',
@@ -338,11 +266,9 @@ Future<void> generateAndPrintArabicPdf(List<Car> cars) async {
                   font: arabicFont, fontWeight: pw.FontWeight.bold),
               headerDecoration:
                   const pw.BoxDecoration(color: PdfColors.grey300),
-              cellAlignment:
-                  pw.Alignment.center, // Center the text in each cell
+              cellAlignment: pw.Alignment.center,
               columnWidths: {
-                0: pw
-                    .FlexColumnWidth(), // Adjust the width of columns as needed
+                0: pw.FlexColumnWidth(),
                 1: pw.FlexColumnWidth(),
                 2: pw.FlexColumnWidth(),
                 3: pw.FlexColumnWidth(),
