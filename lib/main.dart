@@ -1,4 +1,3 @@
-import 'package:cars_manager/car.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'car_form.dart';
@@ -6,8 +5,10 @@ import 'cars_table.dart';
 import 'database_helper.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'car.dart';
 import 'package:file_picker/file_picker.dart';
 import 'firebase_options.dart';
+import 'favorite.dart'; // Import the Favorite screen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,13 +63,11 @@ class WelcomeScreenState extends State<WelcomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Flexible(
-              child: Expanded(
-                child: Image.asset(
-                  'assets/images/LogoTrans.png',
-                  height: 300,
-                  width: 300,
-                  fit: BoxFit.contain,
-                ),
+              child: Image.asset(
+                'assets/images/LogoTrans.png',
+                height: 300,
+                width: 300,
+                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(height: 16),
@@ -96,6 +95,23 @@ class WelcomeScreenState extends State<WelcomeScreen> {
               },
               child: const Text(
                 'Go to Car Table',
+                style: TextStyle(
+                  color: Color(0xffE0A75E),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => FavoriteScreen(
+                          favorites: [])), // Navigate to the Favorite screen
+                );
+              },
+              child: const Text(
+                'Go to Favorites',
                 style: TextStyle(
                   color: Color(0xffE0A75E),
                 ),

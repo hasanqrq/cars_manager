@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'car.dart';
 import 'car_form.dart';
+import 'favorite.dart'; // Import favorite screen
+import 'search_cars.dart'; // Import the search function
+import 'print_car.dart'; // Import the print function
 import 'package:intl/intl.dart';
-import 'package:printing/printing.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:flutter/services.dart' show rootBundle;
 
 class CarsTable extends StatefulWidget {
   const CarsTable({super.key});
@@ -17,7 +16,8 @@ class CarsTable extends StatefulWidget {
 
 class CarsTableState extends State<CarsTable> {
   List<Car>? _cars;
-  String searchQuery = ""; // Variable to hold the search query
+  List<Car> _favorites = [];
+  String searchQuery = "";
 
   @override
   void initState() {
@@ -27,9 +27,9 @@ class CarsTableState extends State<CarsTable> {
 
   void _refreshCars() async {
     final cars = await DatabaseHelper().getCars();
-    debugPrint('Fetched cars: ${cars.length}'); // Debugging line
+    debugPrint('Fetched cars: ${cars.length}');
 
-    if (!mounted) return; // Check if widget is still mounted
+    if (!mounted) return;
 
     setState(() {
       _cars = cars;
@@ -39,7 +39,7 @@ class CarsTableState extends State<CarsTable> {
   void _deleteCar(String id) async {
     await DatabaseHelper().deleteCar(id);
 
-    if (!mounted) return; // Check if widget is still mounted
+    if (!mounted) return;
 
     setState(() {
       _cars = _cars?.where((car) => car.id != id).toList();
@@ -54,47 +54,39 @@ class CarsTableState extends State<CarsTable> {
   }
 
   void _editCar(Car car) async {
-    // Navigate to the car form with the current car data for editing
     final updatedCar = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            CarForm(car: car), // Assuming CarForm is updated to handle editing
+        builder: (context) => CarForm(car: car),
       ),
     );
 
     if (updatedCar != null) {
-      // If the car is updated, refresh the table
       _refreshCars();
     }
   }
 
-  void _printTable() async {
-    // Generate and print the PDF
-    await generateAndPrintArabicPdf(_cars ?? []);
+  void _printCar(Car car) async {
+    await generateAndPrintArabicPdf([car]);
   }
 
-  List<Car> _filterCars(List<Car> cars) {
-    // Filter the list of cars based on the search query
-    if (searchQuery.isEmpty) {
-      return cars;
-    } else {
-      return cars.where((car) {
-        return car.contractNumber
-                .toLowerCase()
-                .contains(searchQuery.toLowerCase()) ||
-            car.vehicleNumber
-                .toString()
-                .contains(searchQuery) || // Added vehicleNumber search
-            car.shieldNumber
-                .toLowerCase()
-                .contains(searchQuery.toLowerCase()) ||
-            car.manufacturer
-                .toLowerCase()
-                .contains(searchQuery.toLowerCase()) ||
-            car.tradeNickname.toLowerCase().contains(searchQuery.toLowerCase());
-      }).toList();
-    }
+  void _toggleFavorite(Car car) {
+    setState(() {
+      if (_favorites.contains(car)) {
+        _favorites.remove(car);
+      } else {
+        _favorites.add(car);
+      }
+    });
+  }
+
+  void _navigateToFavorites() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FavoriteScreen(favorites: _favorites),
+      ),
+    );
   }
 
   @override
@@ -111,8 +103,8 @@ class CarsTableState extends State<CarsTable> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.print),
-            onPressed: _printTable, // Add print button to app bar
+            icon: const Icon(Icons.favorite),
+            onPressed: _navigateToFavorites, // Navigate to favorites screen
           ),
         ],
       ),
@@ -157,17 +149,15 @@ class CarsTableState extends State<CarsTable> {
                                   DataColumn(
                                       label: Text('Year of Manufacture')),
                                   DataColumn(label: Text('Engine Capacity')),
-                                  DataColumn(
-                                      label: Text('Cost Price')), // New column
-                                  DataColumn(
-                                      label: Text('Sell Price')), // New column
+                                  DataColumn(label: Text('Cost Price')),
+                                  DataColumn(label: Text('Sell Price')),
                                   DataColumn(label: Text('Notes')),
                                   DataColumn(label: Text('Actions')),
                                 ],
-                                rows: _filterCars(_cars!).map((car) {
+                                rows:
+                                    filterCars(_cars!, searchQuery).map((car) {
                                   final String formattedDate = DateFormat.y()
-                                      .format(car
-                                          .yearOfmanufacture); // Format date to show only the year
+                                      .format(car.yearOfmanufacture);
                                   return DataRow(
                                     cells: [
                                       DataCell(Text(car.contractNumber)),
@@ -177,14 +167,11 @@ class CarsTableState extends State<CarsTable> {
                                       DataCell(Text(car.manufacturer)),
                                       DataCell(Text(car.tradeNickname)),
                                       DataCell(Text(car.colour)),
-                                      DataCell(Text(
-                                          formattedDate)), // Display only the year
+                                      DataCell(Text(formattedDate)),
                                       DataCell(
                                           Text(car.engineCapacity.toString())),
-                                      DataCell(Text(car.costPrice
-                                          .toString())), // New field
-                                      DataCell(Text(car.sellPrice
-                                          .toString())), // New field
+                                      DataCell(Text(car.costPrice.toString())),
+                                      DataCell(Text(car.sellPrice.toString())),
                                       DataCell(Text(car.notes)),
                                       DataCell(
                                         Row(
@@ -203,6 +190,24 @@ class CarsTableState extends State<CarsTable> {
                                                 _deleteCar(car.id);
                                               },
                                             ),
+                                            IconButton(
+                                              icon: const Icon(Icons.print,
+                                                  color: Colors.green),
+                                              onPressed: () {
+                                                _printCar(car);
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: Icon(
+                                                _favorites.contains(car)
+                                                    ? Icons.favorite
+                                                    : Icons.favorite_border,
+                                                color: Colors.pink,
+                                              ),
+                                              onPressed: () {
+                                                _toggleFavorite(car);
+                                              },
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -219,157 +224,4 @@ class CarsTableState extends State<CarsTable> {
       ),
     );
   }
-}
-
-// Function to generate and print a PDF with Arabic text
-// Future<void> generateAndPrintArabicPdf(List<Car> cars) async {
-//   final pw.Document pdf = pw.Document();
-
-//   var arabicFont =
-//       pw.Font.ttf(await rootBundle.load("assets/fonts/Cairo-Regular.ttf"));
-
-//   pdf.addPage(pw.Page(
-//     theme: pw.ThemeData.withFont(
-//       base: arabicFont,
-//     ),
-//     build: (pw.Context context) {
-//       return pw.Table.fromTextArray(
-//         headers: [
-//           'Contract Number',
-//           'Vehicle Number',
-//           'Shield Number',
-//           'Manufacturer',
-//           'Trade Nickname',
-//           'Colour',
-//           'Year of Manufacture',
-//           'Engine Capacity',
-//           'Cost Price',
-//           'Sell Price',
-//           'Notes'
-//         ],
-//         data: cars.map((car) {
-//           return [
-//             _getDirectionality(car.contractNumber, arabicFont),
-//             _getDirectionality(car.vehicleNumber.toString(), arabicFont),
-//             _getDirectionality(car.shieldNumber, arabicFont),
-//             _getDirectionality(car.manufacturer, arabicFont),
-//             _getDirectionality(car.tradeNickname, arabicFont),
-//             _getDirectionality(car.colour, arabicFont),
-//             _getDirectionality(
-//                 DateFormat.y().format(car.yearOfmanufacture), arabicFont),
-//             _getDirectionality(car.engineCapacity.toString(), arabicFont),
-//             _getDirectionality(car.costPrice.toString(), arabicFont),
-//             _getDirectionality(car.sellPrice.toString(), arabicFont),
-//             _getDirectionality(car.notes, arabicFont),
-//           ];
-//         }).toList(),
-//         cellStyle: pw.TextStyle(font: arabicFont),
-//         headerStyle:
-//             pw.TextStyle(font: arabicFont, fontWeight: pw.FontWeight.bold),
-//         headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
-//       );
-//     },
-//   ));
-
-//   await Printing.layoutPdf(
-//     onLayout: (PdfPageFormat format) async => pdf.save(),
-//   );
-// }
-
-// pw.Widget _getDirectionality(String text, pw.Font font) {
-//   final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(text);
-//   return pw.Directionality(
-//     textDirection: isArabic ? pw.TextDirection.rtl : pw.TextDirection.ltr,
-//     child: pw.Text(text, style: pw.TextStyle(font: font)),
-//   );
-// }
-Future<void> generateAndPrintArabicPdf(List<Car> cars) async {
-  final pw.Document pdf = pw.Document();
-
-  // Load the Arabic font
-  var arabicFont =
-      pw.Font.ttf(await rootBundle.load("assets/fonts/Cairo-Regular.ttf"));
-
-  pdf.addPage(
-    pw.Page(
-      pageFormat:
-          PdfPageFormat.a4.landscape, // Set the page format to A4 landscape
-      theme: pw.ThemeData.withFont(
-        base: arabicFont,
-      ),
-      build: (pw.Context context) {
-        return pw.Center(
-          // Center the table within the page
-          child: pw.Container(
-            width: double.infinity, // Make the table take full width
-            height: double.infinity, // Make the table take full height
-            child: pw.Table.fromTextArray(
-              headers: [
-                'Contract Number',
-                'Vehicle Number',
-                'Shield Number',
-                'Manufacturer',
-                'Trade Nickname',
-                'Colour',
-                'Year of Manufacture',
-                'Engine Capacity',
-                'Cost Price',
-                'Sell Price',
-                'Notes'
-              ],
-              data: cars.map((car) {
-                return [
-                  _getDirectionality(car.contractNumber, arabicFont),
-                  _getDirectionality(car.vehicleNumber.toString(), arabicFont),
-                  _getDirectionality(car.shieldNumber, arabicFont),
-                  _getDirectionality(car.manufacturer, arabicFont),
-                  _getDirectionality(car.tradeNickname, arabicFont),
-                  _getDirectionality(car.colour, arabicFont),
-                  _getDirectionality(
-                      DateFormat.y().format(car.yearOfmanufacture), arabicFont),
-                  _getDirectionality(car.engineCapacity.toString(), arabicFont),
-                  _getDirectionality(car.costPrice.toString(), arabicFont),
-                  _getDirectionality(car.sellPrice.toString(), arabicFont),
-                  _getDirectionality(car.notes, arabicFont),
-                ];
-              }).toList(),
-              cellStyle: pw.TextStyle(font: arabicFont),
-              headerStyle: pw.TextStyle(
-                  font: arabicFont, fontWeight: pw.FontWeight.bold),
-              headerDecoration:
-                  const pw.BoxDecoration(color: PdfColors.grey300),
-              cellAlignment:
-                  pw.Alignment.center, // Center the text in each cell
-              columnWidths: {
-                0: pw
-                    .FlexColumnWidth(), // Adjust the width of columns as needed
-                1: pw.FlexColumnWidth(),
-                2: pw.FlexColumnWidth(),
-                3: pw.FlexColumnWidth(),
-                4: pw.FlexColumnWidth(),
-                5: pw.FlexColumnWidth(),
-                6: pw.FlexColumnWidth(),
-                7: pw.FlexColumnWidth(),
-                8: pw.FlexColumnWidth(),
-                9: pw.FlexColumnWidth(),
-                10: pw.FlexColumnWidth(),
-              },
-            ),
-          ),
-        );
-      },
-    ),
-  );
-
-  await Printing.layoutPdf(
-    onLayout: (PdfPageFormat format) async => pdf.save(),
-  );
-}
-
-pw.Widget _getDirectionality(String text, pw.Font font) {
-  final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(text);
-  return pw.Directionality(
-    textDirection: isArabic ? pw.TextDirection.rtl : pw.TextDirection.ltr,
-    child: pw.Text(text, style: pw.TextStyle(font: font)),
-  );
 }
