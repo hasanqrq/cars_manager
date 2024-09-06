@@ -3,10 +3,6 @@ import 'database_helper.dart';
 import 'car.dart';
 import 'car_form.dart';
 import 'package:intl/intl.dart';
-import 'package:printing/printing.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:flutter/services.dart' show rootBundle;
 
 class CarsTable extends StatefulWidget {
   const CarsTable({super.key});
@@ -69,7 +65,7 @@ class CarsTableState extends State<CarsTable> {
   }
 
   void _printTable() async {
-    await generateAndPrintArabicPdf(_cars ?? []);
+    // Implement your print function here.
   }
 
   List<Car> _filterCars(List<Car> cars) {
@@ -114,7 +110,7 @@ class CarsTableState extends State<CarsTable> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(8.0), // Reduced padding
             child: TextField(
               decoration: const InputDecoration(
                 labelText:
@@ -146,6 +142,12 @@ class CarsTableState extends State<CarsTable> {
                               controller: _horizontalScrollController,
                               scrollDirection: Axis.horizontal,
                               child: DataTable(
+                                columnSpacing:
+                                    8.0, // Reduced spacing between columns
+                                dataRowHeight:
+                                    25.0, // Reduced row height for smaller cells
+                                headingRowHeight:
+                                    30.0, // Smaller heading row height
                                 columns: const [
                                   DataColumn(label: Text('Contract Number')),
                                   DataColumn(label: Text('Vehicle Number')),
@@ -166,19 +168,52 @@ class CarsTableState extends State<CarsTable> {
                                       .format(car.yearOfmanufacture);
                                   return DataRow(
                                     cells: [
-                                      DataCell(Text(car.contractNumber)),
-                                      DataCell(
-                                          Text(car.vehicleNumber.toString())),
-                                      DataCell(Text(car.shieldNumber)),
-                                      DataCell(Text(car.manufacturer)),
-                                      DataCell(Text(car.tradeNickname)),
-                                      DataCell(Text(car.colour)),
-                                      DataCell(Text(formattedDate)),
-                                      DataCell(
-                                          Text(car.engineCapacity.toString())),
-                                      DataCell(Text(car.costPrice.toString())),
-                                      DataCell(Text(car.sellPrice.toString())),
-                                      DataCell(Text(car.notes)),
+                                      DataCell(Text(
+                                        car.contractNumber,
+                                        style: const TextStyle(
+                                            fontSize:
+                                                10.0), // Smaller font size
+                                      )),
+                                      DataCell(Text(
+                                        car.vehicleNumber.toString(),
+                                        style: const TextStyle(fontSize: 10.0),
+                                      )),
+                                      DataCell(Text(
+                                        car.shieldNumber,
+                                        style: const TextStyle(fontSize: 10.0),
+                                      )),
+                                      DataCell(Text(
+                                        car.manufacturer,
+                                        style: const TextStyle(fontSize: 10.0),
+                                      )),
+                                      DataCell(Text(
+                                        car.tradeNickname,
+                                        style: const TextStyle(fontSize: 10.0),
+                                      )),
+                                      DataCell(Text(
+                                        car.colour,
+                                        style: const TextStyle(fontSize: 10.0),
+                                      )),
+                                      DataCell(Text(
+                                        formattedDate,
+                                        style: const TextStyle(fontSize: 10.0),
+                                      )),
+                                      DataCell(Text(
+                                        car.engineCapacity.toString(),
+                                        style: const TextStyle(fontSize: 10.0),
+                                      )),
+                                      DataCell(Text(
+                                        car.costPrice.toString(),
+                                        style: const TextStyle(fontSize: 10.0),
+                                      )),
+                                      DataCell(Text(
+                                        car.sellPrice.toString(),
+                                        style: const TextStyle(fontSize: 10.0),
+                                      )),
+                                      DataCell(Text(
+                                        car.notes,
+                                        style: const TextStyle(fontSize: 10.0),
+                                      )),
                                       DataCell(
                                         Row(
                                           children: [
@@ -212,90 +247,4 @@ class CarsTableState extends State<CarsTable> {
       ),
     );
   }
-}
-
-Future<void> generateAndPrintArabicPdf(List<Car> cars) async {
-  final pw.Document pdf = pw.Document();
-
-  var arabicFont =
-      pw.Font.ttf(await rootBundle.load("assets/fonts/Cairo-Regular.ttf"));
-
-  pdf.addPage(
-    pw.Page(
-      pageFormat: PdfPageFormat.a4.landscape,
-      theme: pw.ThemeData.withFont(
-        base: arabicFont,
-      ),
-      build: (pw.Context context) {
-        return pw.Center(
-          child: pw.Container(
-            width: double.infinity,
-            height: double.infinity,
-            child: pw.Table.fromTextArray(
-              headers: [
-                'Contract Number',
-                'Vehicle Number',
-                'Shield Number',
-                'Manufacturer',
-                'Trade Nickname',
-                'Colour',
-                'Year of Manufacture',
-                'Engine Capacity',
-                'Cost Price',
-                'Sell Price',
-                'Notes'
-              ],
-              data: cars.map((car) {
-                return [
-                  _getDirectionality(car.contractNumber, arabicFont),
-                  _getDirectionality(car.vehicleNumber.toString(), arabicFont),
-                  _getDirectionality(car.shieldNumber, arabicFont),
-                  _getDirectionality(car.manufacturer, arabicFont),
-                  _getDirectionality(car.tradeNickname, arabicFont),
-                  _getDirectionality(car.colour, arabicFont),
-                  _getDirectionality(
-                      DateFormat.y().format(car.yearOfmanufacture), arabicFont),
-                  _getDirectionality(car.engineCapacity.toString(), arabicFont),
-                  _getDirectionality(car.costPrice.toString(), arabicFont),
-                  _getDirectionality(car.sellPrice.toString(), arabicFont),
-                  _getDirectionality(car.notes, arabicFont),
-                ];
-              }).toList(),
-              cellStyle: pw.TextStyle(font: arabicFont),
-              headerStyle: pw.TextStyle(
-                  font: arabicFont, fontWeight: pw.FontWeight.bold),
-              headerDecoration:
-                  const pw.BoxDecoration(color: PdfColors.grey300),
-              cellAlignment: pw.Alignment.center,
-              columnWidths: {
-                0: pw.FlexColumnWidth(),
-                1: pw.FlexColumnWidth(),
-                2: pw.FlexColumnWidth(),
-                3: pw.FlexColumnWidth(),
-                4: pw.FlexColumnWidth(),
-                5: pw.FlexColumnWidth(),
-                6: pw.FlexColumnWidth(),
-                7: pw.FlexColumnWidth(),
-                8: pw.FlexColumnWidth(),
-                9: pw.FlexColumnWidth(),
-                10: pw.FlexColumnWidth(),
-              },
-            ),
-          ),
-        );
-      },
-    ),
-  );
-
-  await Printing.layoutPdf(
-    onLayout: (PdfPageFormat format) async => pdf.save(),
-  );
-}
-
-pw.Widget _getDirectionality(String text, pw.Font font) {
-  final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(text);
-  return pw.Directionality(
-    textDirection: isArabic ? pw.TextDirection.rtl : pw.TextDirection.ltr,
-    child: pw.Text(text, style: pw.TextStyle(font: font)),
-  );
 }

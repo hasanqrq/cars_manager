@@ -7,7 +7,7 @@ import 'database_helper.dart';
 class CarForm extends StatefulWidget {
   final Car? car; // Add this parameter to accept a Car object
 
-  const CarForm({Key? key, this.car}) : super(key: key);
+  const CarForm({super.key, this.car});
 
   @override
   CarFormState createState() => CarFormState();
