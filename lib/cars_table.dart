@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'car.dart';
 import 'car_form.dart';
+import 'favorite.dart'; // Import favorite screen
+import 'search_cars.dart'; // Import the search function
+import 'print_car.dart'; // Import the print function
 import 'package:intl/intl.dart';
 
 class CarsTable extends StatefulWidget {
@@ -13,9 +16,7 @@ class CarsTable extends StatefulWidget {
 
 class CarsTableState extends State<CarsTable> {
   List<Car>? _cars;
-  String searchQuery = "";
-  final ScrollController _verticalScrollController = ScrollController();
-  final ScrollController _horizontalScrollController = ScrollController();
+  String searchQuery = ""; // Variable to hold the search query
 
   @override
   void initState() {
@@ -65,10 +66,12 @@ class CarsTableState extends State<CarsTable> {
   }
 
   void _printTable() async {
-    // Implement your print function here.
+    // Generate and print the PDF
+    await generateAndPrintArabicPdf(_cars ?? []);
   }
 
   List<Car> _filterCars(List<Car> cars) {
+    // Filter the list of cars based on the search query
     if (searchQuery.isEmpty) {
       return cars;
     } else {
@@ -76,7 +79,9 @@ class CarsTableState extends State<CarsTable> {
         return car.contractNumber
                 .toLowerCase()
                 .contains(searchQuery.toLowerCase()) ||
-            car.vehicleNumber.toString().contains(searchQuery) ||
+            car.vehicleNumber
+                .toString()
+                .contains(searchQuery) || // Added vehicleNumber search
             car.shieldNumber
                 .toLowerCase()
                 .contains(searchQuery.toLowerCase()) ||
@@ -103,7 +108,7 @@ class CarsTableState extends State<CarsTable> {
         actions: [
           IconButton(
             icon: const Icon(Icons.print),
-            onPressed: _printTable,
+            onPressed: _printTable, // Add print button to app bar
           ),
         ],
       ),
@@ -163,57 +168,28 @@ class CarsTableState extends State<CarsTable> {
                                   DataColumn(label: Text('Notes')),
                                   DataColumn(label: Text('Actions')),
                                 ],
-                                rows: _filterCars(_cars!).map((car) {
+                                rows:
+                                    filterCars(_cars!, searchQuery).map((car) {
                                   final String formattedDate = DateFormat.y()
                                       .format(car.yearOfmanufacture);
                                   return DataRow(
                                     cells: [
+                                      DataCell(Text(car.contractNumber)),
+                                      DataCell(
+                                          Text(car.vehicleNumber.toString())),
+                                      DataCell(Text(car.shieldNumber)),
+                                      DataCell(Text(car.manufacturer)),
+                                      DataCell(Text(car.tradeNickname)),
+                                      DataCell(Text(car.colour)),
                                       DataCell(Text(
-                                        car.contractNumber,
-                                        style: const TextStyle(
-                                            fontSize:
-                                                10.0), // Smaller font size
-                                      )),
-                                      DataCell(Text(
-                                        car.vehicleNumber.toString(),
-                                        style: const TextStyle(fontSize: 10.0),
-                                      )),
-                                      DataCell(Text(
-                                        car.shieldNumber,
-                                        style: const TextStyle(fontSize: 10.0),
-                                      )),
-                                      DataCell(Text(
-                                        car.manufacturer,
-                                        style: const TextStyle(fontSize: 10.0),
-                                      )),
-                                      DataCell(Text(
-                                        car.tradeNickname,
-                                        style: const TextStyle(fontSize: 10.0),
-                                      )),
-                                      DataCell(Text(
-                                        car.colour,
-                                        style: const TextStyle(fontSize: 10.0),
-                                      )),
-                                      DataCell(Text(
-                                        formattedDate,
-                                        style: const TextStyle(fontSize: 10.0),
-                                      )),
-                                      DataCell(Text(
-                                        car.engineCapacity.toString(),
-                                        style: const TextStyle(fontSize: 10.0),
-                                      )),
-                                      DataCell(Text(
-                                        car.costPrice.toString(),
-                                        style: const TextStyle(fontSize: 10.0),
-                                      )),
-                                      DataCell(Text(
-                                        car.sellPrice.toString(),
-                                        style: const TextStyle(fontSize: 10.0),
-                                      )),
-                                      DataCell(Text(
-                                        car.notes,
-                                        style: const TextStyle(fontSize: 10.0),
-                                      )),
+                                          formattedDate)), // Display only the year
+                                      DataCell(
+                                          Text(car.engineCapacity.toString())),
+                                      DataCell(Text(car.costPrice
+                                          .toString())), // New field
+                                      DataCell(Text(car.sellPrice
+                                          .toString())), // New field
+                                      DataCell(Text(car.notes)),
                                       DataCell(
                                         Row(
                                           children: [
@@ -229,6 +205,24 @@ class CarsTableState extends State<CarsTable> {
                                                   color: Colors.red),
                                               onPressed: () {
                                                 _deleteCar(car.id);
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.print,
+                                                  color: Colors.green),
+                                              onPressed: () {
+                                                _printCar(car);
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: Icon(
+                                                _favorites.contains(car)
+                                                    ? Icons.favorite
+                                                    : Icons.favorite_border,
+                                                color: Colors.pink,
+                                              ),
+                                              onPressed: () {
+                                                _toggleFavorite(car);
                                               },
                                             ),
                                           ],
