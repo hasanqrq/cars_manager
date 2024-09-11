@@ -5,6 +5,7 @@ import 'car_form.dart';
 import 'favorite.dart'; // Import favorite screen
 import 'search_cars.dart'; // Import the search function
 import 'print_car.dart'; // Import the print function
+import 'sold_available_cars.dart'; // Import the Sold/Available Cars Screen
 import 'package:intl/intl.dart';
 
 class CarsTable extends StatefulWidget {
@@ -70,6 +71,7 @@ class CarsTableState extends State<CarsTable> {
     await generateAndPrintArabicPdf(_cars ?? []);
   }
 
+<<<<<<< HEAD
   List<Car> _filterCars(List<Car> cars) {
     // Filter the list of cars based on the search query
     if (searchQuery.isEmpty) {
@@ -91,6 +93,51 @@ class CarsTableState extends State<CarsTable> {
             car.tradeNickname.toLowerCase().contains(searchQuery.toLowerCase());
       }).toList();
     }
+=======
+  void _toggleFavorite(Car car) {
+    setState(() {
+      if (_favorites.contains(car)) {
+        _favorites.remove(car);
+      } else {
+        _favorites.add(car);
+      }
+    });
+  }
+
+  void _toggleSold(Car car) async {
+    final newStatus = !car.isSold; // Toggle sold status
+    await DatabaseHelper().markCarAsSold(car.id, newStatus);
+
+    setState(() {
+      car.isSold = newStatus; // Update UI to reflect the new status
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Car marked as ${newStatus ? 'Sold' : 'Available'}!'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _navigateToFavorites() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FavoriteScreen(favorites: _favorites),
+      ),
+    );
+>>>>>>> c5f6304 (solid)
+  }
+
+  // New function to navigate to Sold and Available cars screen
+  void _navigateToSoldAvailableCarsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SoldAvailableCarsScreen(),
+      ),
+    );
   }
 
   @override
@@ -109,6 +156,11 @@ class CarsTableState extends State<CarsTable> {
           IconButton(
             icon: const Icon(Icons.print),
             onPressed: _printTable, // Add print button to app bar
+          ),
+          IconButton(
+            icon: const Icon(Icons.view_list),
+            onPressed:
+                _navigateToSoldAvailableCarsScreen, // Navigate to sold/available screen
           ),
         ],
       ),
@@ -166,6 +218,7 @@ class CarsTableState extends State<CarsTable> {
                                   DataColumn(label: Text('Cost Price')),
                                   DataColumn(label: Text('Sell Price')),
                                   DataColumn(label: Text('Notes')),
+                                  DataColumn(label: Text('Sold Status')),
                                   DataColumn(label: Text('Actions')),
                                 ],
                                 rows:
@@ -190,6 +243,17 @@ class CarsTableState extends State<CarsTable> {
                                       DataCell(Text(car.sellPrice
                                           .toString())), // New field
                                       DataCell(Text(car.notes)),
+                                      DataCell(
+                                        Text(
+                                          car.isSold ? 'Sold' : 'Available',
+                                          style: TextStyle(
+                                            color: car.isSold
+                                                ? Colors.red
+                                                : Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                       DataCell(
                                         Row(
                                           children: [
@@ -223,6 +287,18 @@ class CarsTableState extends State<CarsTable> {
                                               ),
                                               onPressed: () {
                                                 _toggleFavorite(car);
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: Icon(
+                                                car.isSold
+                                                    ? Icons.check_box
+                                                    : Icons
+                                                        .check_box_outline_blank,
+                                                color: Colors.orange,
+                                              ),
+                                              onPressed: () {
+                                                _toggleSold(car);
                                               },
                                             ),
                                           ],

@@ -12,6 +12,7 @@ class Car {
   final String notes;
   final double costPrice; // New field
   final double sellPrice; // New field
+  bool isSold; // New field to indicate if the car is sold
 
   Car({
     required this.id,
@@ -26,6 +27,7 @@ class Car {
     required this.notes,
     required this.costPrice, // New field
     required this.sellPrice, // New field
+    this.isSold = false, // Default to unsold
   });
 
   Map<String, dynamic> toMap() {
@@ -43,6 +45,7 @@ class Car {
       'notes': notes,
       'costPrice': costPrice, // New field
       'sellPrice': sellPrice, // New field
+      'isSold': isSold ? 1 : 0, // Store 'isSold' as an integer
     };
   }
 
@@ -70,6 +73,8 @@ class Car {
           0.0, // New field: Convert to double and add default value
       sellPrice: map['sellPrice']?.toDouble() ??
           0.0, // New field: Convert to double and add default value
+      isSold: map['isSold'] ==
+          1, // New field: Retrieve the sold status from the database
     );
   }
 }

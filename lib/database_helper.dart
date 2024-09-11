@@ -15,6 +15,15 @@ class DatabaseHelper {
     }
   }
 
+  /// Updates a car's information in Firestore, including the sold status.
+  Future<void> updateCar(Car car) async {
+    try {
+      await carsCollection.doc(car.id).update(car.toMap());
+    } catch (e) {
+      print('Error updating car: $e');
+    }
+  }
+
   /// Fetches a car from Firestore using the shieldNumber.
   Future<Car?> getCarByChassisNumber(String shieldNumber) async {
     try {
@@ -28,7 +37,6 @@ class DatabaseHelper {
             querySnapshot.docs.first.data() as Map<String, dynamic>);
       }
     } catch (e) {
-      // Handle error here if needed
       print('Error fetching car by shield number: $e');
     }
     return null;
@@ -47,7 +55,6 @@ class DatabaseHelper {
             querySnapshot.docs.first.data() as Map<String, dynamic>);
       }
     } catch (e) {
-      // Handle error here if needed
       print('Error fetching car by vehicle number: $e');
     }
     return null;
@@ -62,9 +69,17 @@ class DatabaseHelper {
           .map((doc) => Car.fromMap(doc.data() as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      // Handle error here if needed
       print('Error fetching cars: $e');
       return [];
+    }
+  }
+
+  /// Updates the sold status of a car in Firestore.
+  Future<void> markCarAsSold(String carId, bool isSold) async {
+    try {
+      await carsCollection.doc(carId).update({'isSold': isSold ? 1 : 0});
+    } catch (e) {
+      print('Error marking car as sold: $e');
     }
   }
 
@@ -73,7 +88,6 @@ class DatabaseHelper {
     try {
       await carsCollection.doc(id).delete();
     } catch (e) {
-      // Handle error here if needed
       print('Error deleting car: $e');
     }
   }

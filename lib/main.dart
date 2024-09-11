@@ -3,12 +3,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'car_form.dart';
 import 'cars_table.dart';
 import 'database_helper.dart';
-import 'dart:convert';
-import 'dart:io';
 import 'car.dart';
-import 'package:file_picker/file_picker.dart';
 import 'firebase_options.dart';
-import 'favorite.dart'; // Import the Favorite screen
+import 'dart:convert'; // For encoding/decoding JSON
+import 'dart:html' as html; // Import for web file saving and reading
+import 'favorite.dart';
+import 'sold_available_cars.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,11 +38,10 @@ class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
   @override
-  WelcomeScreenState createState() => WelcomeScreenState(); // Made public
+  WelcomeScreenState createState() => WelcomeScreenState();
 }
 
 class WelcomeScreenState extends State<WelcomeScreen> {
-  // Made public
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,12 +105,11 @@ class WelcomeScreenState extends State<WelcomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => FavoriteScreen(
-                          favorites: [])), // Navigate to the Favorite screen
+                      builder: (context) => const SoldAvailableCarsScreen()),
                 );
               },
               child: const Text(
-                'Go to Favorites',
+                'Go to Available & Sold Cars',
                 style: TextStyle(
                   color: Color(0xffE0A75E),
                 ),
@@ -119,7 +117,7 @@ class WelcomeScreenState extends State<WelcomeScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => _exportDatabase(),
+              onPressed: () => _exportDatabaseForWeb(),
               child: const Text(
                 'Export Database',
                 style: TextStyle(
@@ -129,7 +127,7 @@ class WelcomeScreenState extends State<WelcomeScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => _importDatabase(),
+              onPressed: () => _importDatabaseForWeb(),
               child: const Text(
                 'Import Database',
                 style: TextStyle(
@@ -153,96 +151,69 @@ class WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  Future<void> _exportDatabase() async {
+  // Export Database Function for Web
+  Future<void> _exportDatabaseForWeb() async {
     try {
+      // Get the list of cars from the database
       final cars = await DatabaseHelper().getCars();
+
+      // Convert car data to JSON string
       final jsonData = cars.map((car) => car.toMap()).toList();
       final jsonString = jsonEncode(jsonData);
 
-      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+      // Create a Blob from the JSON string
+      final bytes = utf8.encode(jsonString);
+      final blob = html.Blob([bytes]);
 
-      if (!mounted) return; // Check if widget is still mounted
+      // Create a link element and trigger the download
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute("download", "cars_database.json")
+        ..click();
+      html.Url.revokeObjectUrl(url);
 
-      if (selectedDirectory != null) {
-        final fileName =
-            await _askFileName(context, "Enter a file name for the export");
-        if (fileName != null && fileName.isNotEmpty) {
-          final file = File('$selectedDirectory/$fileName.json');
-          await file.writeAsString(jsonString);
-          if (!mounted) return; // Check if widget is still mounted
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Database exported to ${file.path}')),
-          );
-        }
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Database exported successfully!')),
+      );
     } catch (e) {
-      if (!mounted) return; // Check if widget is still mounted
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to export database: $e')),
       );
     }
   }
 
-  Future<void> _importDatabase() async {
+  // Import Database Function for Web
+  Future<void> _importDatabaseForWeb() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-      );
+      // Create file input and listen for file selection
+      final uploadInput = html.FileUploadInputElement();
+      uploadInput.accept = '.json'; // Accept JSON files
+      uploadInput.click();
 
-      if (!mounted) return; // Check if widget is still mounted
+      uploadInput.onChange.listen((e) async {
+        final file = uploadInput.files!.first;
+        final reader = html.FileReader();
 
-      if (result != null) {
-        final file = File(result.files.single.path!);
-        final jsonString = await file.readAsString();
-        final List<dynamic> jsonData = jsonDecode(jsonString);
+        reader.readAsText(file);
+        reader.onLoadEnd.listen((event) async {
+          final jsonString = reader.result as String;
+          final List<dynamic> jsonData = jsonDecode(jsonString);
 
-        for (var carMap in jsonData) {
-          final car = Car.fromMap(carMap);
-          await DatabaseHelper().insertCar(car);
-        }
+          // Insert each car into the database
+          for (var carMap in jsonData) {
+            final car = Car.fromMap(carMap);
+            await DatabaseHelper().insertCar(car);
+          }
 
-        if (!mounted) return; // Check if widget is still mounted
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Database imported from ${file.path}')),
-        );
-      }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Database imported successfully!')),
+          );
+        });
+      });
     } catch (e) {
-      if (!mounted) return; // Check if widget is still mounted
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to import database: $e')),
       );
     }
-  }
-
-  Future<String?> _askFileName(BuildContext context, String title) async {
-    final TextEditingController controller = TextEditingController();
-
-    return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: "Enter file name"),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('CANCEL'),
-              onPressed: () {
-                Navigator.of(context).pop(null);
-              },
-            ),
-            TextButton(
-              child: const Text('SAVE'),
-              onPressed: () {
-                Navigator.of(context).pop(controller.text);
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 }
